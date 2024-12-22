@@ -3,6 +3,7 @@ import math
 from queue import PriorityQueue
 from queue import Queue
 
+
 boards = [
 [6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5],
 [3, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 3],
@@ -490,56 +491,59 @@ def reconstruct_path(goal_node):
 
 
 def A_star(graph, start_node, goal_node):
-   # PriorityQueue to manage nodes based on their f_cost
-   openQueue = PriorityQueue()
-   closed_list = []  # List to track visited nodes
-   start_node.g_cost = 0  # Initialize start node's g_cost to 0
-   openQueue.put((0, 0, start_node))  # Add start node to the queue with f_cost = 0
-  
-   count = 0  # Counter to for queue manages nodes with the same f_cost
-  
-   # Initialise all nodes with default costs and no parent
-   for node in graph:
-       node.g_cost = float('inf')  
-       node.f_cost = float('inf')  
-       node.parent = None          
-  
-   # Main A* search loop
-   while openQueue.qsize() != 0:
-       # Get the node with the lowest f_cost from the priority queue
-       current_node = (openQueue.get()[2])
-      
-       # If the goal node is reached, reconstruct and return the path
-       if current_node.position == goal_node.position:
-           return reconstruct_path(current_node)
-      
-       # Add neighbours for the current node
-       current_node.add_neighbour()
+    openQueue = PriorityQueue()
+    closed_list = []
+    
+    for node in graph:
+        node.g_cost = float('inf')
+        node.f_cost = float('inf')
+        node.parent = None
+    
+    for node in graph_of_nodes:
+        if node.position == start_node.position:
+            start_node = node
+            
+    start_node.g_cost = 0
+    openQueue.put((0, 0, start_node)) # creates a tuple so now it works
+    
+    count = 0
+    
+    while openQueue.qsize() != 0:
+        # find node with the lowest f_cost
+        current_node =  (openQueue.get()[2])
+        
+        if current_node.position == goal_node.position:
+            return(reconstruct_path(current_node))
+        
+        temp_f_costs = []
+        
+        closed_list.append(current_node.position)
+        
+        for node in graph_of_nodes:
+            if node.position == current_node.position:
+                current_node = node
+        
 
+        # neighbour is a tuple of (key value) where the key is the node and value is the distance
+        for neighbour in current_node.neighbours.items():
+            # we start at the start_node with a g_cost of 0
+            if neighbour[0].position not in [node for node in closed_list]:
+                
+                temp_f_cost = current_node.g_cost + neighbour[1] + heuristic(neighbour[0], goal_node)
+                if temp_f_cost < neighbour[0].f_cost:
+                    count += 1
+                    
+                    for node in graph_of_nodes:
+                        if node.position == neighbour[0].position:
+                            nextNode = node
 
-       # List to store temporary f_costs for debugging or comparison
-       temp_f_costs = []
-      
-       # Mark the current node as visited by adding it to the closed list
-       closed_list.append(current_node)
-      
-       # Iterate through each neighbour of the current node
-       for neighbour in current_node.neighbours:
-           # Skip already visited nodes
-           if neighbour not in closed_list:
-               # Calculate the temp f_cost for the neighbour
-               temp_f_cost = current_node.g_cost + 1 + heuristic(neighbour, goal_node)
-
-
-               # If the new f_cost is better than the previously known cost
-               if temp_f_cost < neighbour.f_cost:
-                   count += 1  # Increment the counter for queue if same f_cost
-                   neighbour.g_cost = current_node.g_cost + 1  # Update g_cost
-                   neighbour.f_cost = temp_f_cost             # Update f_cost
-                   neighbour.parent = current_node            # Set parent to current node
-                  
-                   # Add the neighbour to the queue with its updated costs
-                   openQueue.put((neighbour.f_cost, count, neighbour))
+                    nextNode.g_cost = current_node.g_cost + neighbour[1]
+                    nextNode.f_cost = temp_f_cost
+                    nextNode.parent = current_node
+                    # add the node to the queue which is in order of ascending f_value
+                    f_cost = nextNode.f_cost
+                    
+                    openQueue.put((nextNode.f_cost, count, nextNode))
 
 
 def path_node_to_node(first_node, second_node):
@@ -853,5 +857,4 @@ while run:
 
     
     pygame.display.flip()
-
 
