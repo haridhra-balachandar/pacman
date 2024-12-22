@@ -240,7 +240,7 @@ class Node:
             # l
             if (reverse_direction != 'L') and (boards[i][j - 1] == 0 or boards[i][j - 1] == 1 or boards[i][j - 1] == 2):
                 moves.append((i, j - 1))
-    
+
         if prev_point in moves:
             moves.remove(prev_point)
         
@@ -323,114 +323,133 @@ class Node:
             # now it appends the node
             self.neighbours.update({(Node(neighbour)): final_count})
 
-
     def find_nearest_node(self):
-        global x, y
-        
+        # Get the positions of all nodes in the graph
         positions = [node.position for node in graph_of_nodes]
-        
+    
+        # Check if the current position is already a graph node
         if self.position in positions:
-            return self.position
+            return self.position 
         
-        i,j = self.position
-        path_starts = []
-        near_nodes = []
-        
+        # Extract the current position as (row, column)
+        i, j = self.position
+        path_starts = []  # List to store valid starting points for paths
+        near_nodes = []  # List to store nearest nodes along with their paths and distances
+
+
+        # Check if the current cell is valid for movement and determine path starts
         if boards[i][j] == 0 or boards[i][j] == 1 or boards[i][j] == 2:
+            # Check adjacent cells and add valid ones to path_starts
             if boards[i + 1][j] == 0 or boards[i + 1][j] == 1 or boards[i + 1][j] == 2:
-                path_starts.append((i + 1, j))
+                path_starts.append((i + 1, j))  # Down
             if boards[i - 1][j] == 0 or boards[i - 1][j] == 1 or boards[i - 1][j] == 2:
-                path_starts.append((i - 1, j))
+                path_starts.append((i - 1, j))  # Up
             if boards[i][j + 1] == 0 or boards[i][j + 1] == 1 or boards[i][j + 1] == 2:
-                path_starts.append((i, j + 1))
+                path_starts.append((i, j + 1))  # Right
             if boards[i][j - 1] == 0 or boards[i][j - 1] == 1 or boards[i][j - 1] == 2:
-                path_starts.append((i, j - 1))
+                path_starts.append((i, j - 1))  # Left
         
+        # Check path_start is one of position in graph_of_nodes
         for path_start in path_starts:
             if path_start in positions:
                 return path_start
         
-        departs_queue = Queue(maxsize = 4)
+        departs_queue = Queue(maxsize=4)
         
+        # Add all valid path starts to the queue
         for depart_point in path_starts:
             departs_queue.put(depart_point)
         
         while not departs_queue.empty():
-            
+            # Get the next path start from the queue
             path_start = departs_queue.get()
-            r_direction = self.find_reverse_direction((i,j) , path_start)
-            count = 1
-            path_to_node = []
-            near_node, path_to_node , final_count = self.path_to_adj_node(path_start, (i,j), r_direction, path_to_node, count)
-            near_nodes.append((near_node, path_to_node, final_count))
+            # Find the reverse direction to avoid backtracking
+            r_direction = self.find_reverse_direction((i, j), path_start)
+            count = 1  # Initialize step count
+            path_to_node = []  # List to store the path to the node
             
-        lowest_count = near_nodes[0][2]
-        nearest_node = near_nodes[0][0]
-        path_to_node = near_nodes[0][1]
-        lowest_heuristic = heuristic(Node(CoToArr((x,y))), Node(near_nodes[0][0]))
+            near_node, path_to_node, final_count = self.path_to_adj_node(
+                path_start, (i, j), r_direction, path_to_node, count)
+            # Add the result to the list of nearest nodes
+            near_nodes.append((near_node, path_to_node, final_count))
+        
+        # Initialize with the first node in the near_nodes list
+        lowest_count = near_nodes[0][2]  # Smallest step count
+        nearest_node = near_nodes[0][0]  # Nearest node
+        path_to_node = near_nodes[0][1]  # Path to the nearest node
 
+
+        # Compare all nodes to find the one with the lowest step count
         for node in near_nodes:
-            # find node closest to pacman and closest to ghost
-            if (int(node[2]) < lowest_count):
-                lowest_count = node[2]
-                nearest_node = node[0]
-                path_to_node = node[1]
+            if int(node[2]) < lowest_count:
+                lowest_count = node[2]  # Update the lowest step count
+                nearest_node = node[0]  # Update the nearest node
+                path_to_node = node[1]  # Update the path to the nearest node
         
+        # Add the nearest node to the path and return it
         path_to_node.append(nearest_node)
-        return path_to_node, nearest_node
-    
+        return path_to_node, nearest_node  # Return the path and the nearest node
+
     def node_to_node(self, point, prev_point, end_point, reverse_direction, path_to_node):
-        # position of all the nodes in the graph
+        # Global variable to track positions of all nodes in the graph
         global positions
-        
+        # Extract the current point's coordinates
         i, j = point
-        moves = []
-        
+        moves = []  # List to store possible moves from the current point
+
+        # Check if the current point is already a known node and is not the endpoint
         if point in positions and point != end_point:
-            return None
-        
-        # returns if point is the correct adj node 
+            return None 
+
+        # Check if the current point is the endpoint
         if point == end_point:
-            path_to_node.append(point)
-            return path_to_node
-        
+            path_to_node.append(point)  # Add the endpoint to the path
+            return path_to_node  
+
+        # Only proceed if the current cell is traversable (e.g., value 0, 1, or 2)
         if boards[i][j] == 0 or boards[i][j] == 1 or boards[i][j] == 2:
-            # d
+            # Down unless moving back in reverse direction
             if (reverse_direction != 'D') and (boards[i + 1][j] == 0 or boards[i + 1][j] == 1 or boards[i + 1][j] == 2):
                 moves.append((i + 1, j))
             
-            # u
+            # Up unless moving back in reverse direction
             if (reverse_direction != 'U') and (boards[i - 1][j] == 0 or boards[i - 1][j] == 1 or boards[i - 1][j] == 2):
                 moves.append((i - 1, j))
             
-            # r
+            # Right unless moving back in reverse direction
             if (reverse_direction != 'R') and (boards[i][j + 1] == 0 or boards[i][j + 1] == 1 or boards[i][j + 1] == 2):
                 moves.append((i, j + 1))
-
-            # l
+            
+            # Left unless moving back in reverse direction
             if (reverse_direction != 'L') and (boards[i][j - 1] == 0 or boards[i][j - 1] == 1 or boards[i][j - 1] == 2):
                 moves.append((i, j - 1))
-    
+
+        # Remove the previous point from possible moves to avoid going back
         if prev_point in moves:
             moves.remove(prev_point)
-        
+
+        # Remove the current point from possible moves to prevent looping
         if point in moves:
             moves.remove(point)
-        
+
+        # Determine the new reverse direction based on the first move
         reverse_direction = self.find_reverse_direction(point, moves[0])
-        
+
+        # Add the current point to the path
         path_to_node.append(point)
-        
+
+        # If the next move is already processed and is not the endpoint, terminate
         if moves[0] in positions and moves[0] != end_point:
             return None
-        
+
+        # If the next move is the endpoint, return the path
         if moves[0] == end_point:
             return path_to_node
-        
+
+        # Recursively continue the search with the updated parameters
         else:
             return self.node_to_node(moves[0], point, end_point, reverse_direction, path_to_node)
-
-   
+    
 graph_of_nodes = []
 
 for i in range(1, len(boards) - 1):
@@ -491,35 +510,36 @@ def reconstruct_path(goal_node):
 
 
 def A_star(graph, start_node, goal_node):
-    openQueue = PriorityQueue()
-    closed_list = []
-    
-    for node in graph:
+    openQueue = PriorityQueue()  # Priority queue to manage nodes to explore
+    closed_list = []  # List to keep track of visited nodes
+
+    for node in graph:  # Initialise all nodes with infinite costs and no parent
         node.g_cost = float('inf')
         node.f_cost = float('inf')
         node.parent = None
     
-    for node in graph_of_nodes:
+    for node in graph_of_nodes:  # Find and set the actual start_node
         if node.position == start_node.position:
             start_node = node
             
-    start_node.g_cost = 0
-    openQueue.put((0, 0, start_node)) # creates a tuple so now it works
+    start_node.g_cost = 0  # Start node has a g_cost of 0
+    openQueue.put((0, 0, start_node))  # Creates a tuple for priority queue sorting
     
     count = 0
-    
-    while openQueue.qsize() != 0:
+
+    while openQueue.qsize() != 0:  # Continue until there are no more nodes to explore
         # find node with the lowest f_cost
-        current_node =  (openQueue.get()[2])
+        current_node =  (openQueue.get()[2])  # Get node with the lowest f_cost
+
+
+        if current_node.position == goal_node.position:  # Check if we reached the goal
+            return(reconstruct_path(current_node))  # Return the reconstructed path
         
-        if current_node.position == goal_node.position:
-            return(reconstruct_path(current_node))
+        temp_f_costs = [] 
         
-        temp_f_costs = []
-        
-        closed_list.append(current_node.position)
-        
-        for node in graph_of_nodes:
+        closed_list.append(current_node.position)  # Mark the current node as visited
+                
+        for node in graph_of_nodes:  # Update the current_node reference
             if node.position == current_node.position:
                 current_node = node
         
@@ -544,6 +564,7 @@ def A_star(graph, start_node, goal_node):
                     f_cost = nextNode.f_cost
                     
                     openQueue.put((nextNode.f_cost, count, nextNode))
+                      # Add neighbour to priority queue
 
 
 def path_node_to_node(first_node, second_node):
@@ -674,7 +695,7 @@ def final_path(start_point, end_point):
         end_path = [end_point.position]
         end_node = end_point.position
     else:
-        # chech if point is adj to a node in while case only the node is returned. Check if tuple (path to node) or int(no path just the node)
+        # chech if point is adj to a node in which case only the node is returned. Check if tuple (path to node) or int(no path just the node)
         path_and_node = end_point.find_nearest_node()
         print(end_point.position, "end", path_and_node)
         if isinstance(path_and_node[0], tuple) or isinstance(path_and_node[0], list):
