@@ -101,11 +101,6 @@ def drawBoard():
             if boards[i][j] == 4:
                 pygame.draw.line(screen, b_colour, (j * widthScale , int(i * heightScale + (heightScale / 2))), (j * widthScale + widthScale, int(i * heightScale + (heightScale / 2))), 3)
             if boards[i][j] == 5:
-                    # treat arc within boundary rectangle --> draw from top left corner
-                    # 2 pi radians = 360 degree. so 90 degrees or quarter of circle = pi/2.
-                    # arcs are measured anticlockwise
-                    # 0 radian points to right
-                    # we we measure the grid from top left point ( + in height scale moves it down)
                 pygame.draw.arc(screen, b_colour, [(j * widthScale - (widthScale  * 0.45)) - 2, (i * heightScale + int(heightScale/2)), widthScale, heightScale], 0, (math.pi) / 2, 3)
             if boards[i][j] == 6:
                 pygame.draw.arc(screen, b_colour, [(j * widthScale + (widthScale  * 0.45)) + 2, (i * heightScale + int(heightScale/2)), widthScale, heightScale], (math.pi) / 2, (math.pi), 3)
